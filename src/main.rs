@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::{cell::{RefCell, Ref}, rc::Rc};
+
 use bitmatch::bitmatch;
 
 
@@ -272,10 +274,10 @@ struct ArchState {
    extraflags : u32
 }
 
-struct Sim<'a> {
+struct Sim {
    arch : ArchState,
    base : u32,
-   mem  : &'a Vec<u8>
+   mem  : Rc<RefCell<Vec<u8>>>,
 }
 
 #[derive(Debug)]
@@ -328,7 +330,7 @@ impl ArchState {
   }
 }
 
-impl Sim<'_> {
+impl Sim {
 /*
      fn new(base:u32, mem: &mut Vec<u8>) -> Self {
        Self {
@@ -462,7 +464,10 @@ fn main() {
           mem[i*2+0]=0x41;
      	  mem[i*2+1]=0x01;
      }
-     let mut s = Sim{ arch: ArchState::reset(), base: 0x80000000, mem: &mem };
+     let mem : Rc<RefCell<Vec<u8>>> = Rc::new(RefCell::new(mem));
+     let mut s = Sim{ arch: ArchState::reset(), base: 0x80000000, mem: mem.clone() };
+     mem.borrow_mut()[0] = 55;
+     drop(mem);
      s.arch.pc=0x8000000;
 
      for i in 0..10 {
